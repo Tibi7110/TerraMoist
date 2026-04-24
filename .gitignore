@@ -1,0 +1,21 @@
+# Environment
+.env
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Outputs
+*.png
+ndmi_baragan.png
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
