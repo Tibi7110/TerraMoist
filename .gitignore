@@ -1,5 +1,6 @@
 # Python
 /web/**/__pycache__/
+/.venv/
 /web/**/*.pyc
 /web/**/*.pyo
 /web/**/*.pyd

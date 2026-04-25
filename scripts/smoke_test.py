@@ -1,4 +1,4 @@
-"""Smoke test: hit a running backend and save a demo tile to disk.
+"""Smoke test: hit a running backend and run the irrigation agent pipeline.
 
 Usage:
 1. In one terminal, start the backend from `web/backend`:
@@ -8,12 +8,16 @@ Usage:
 """
 from __future__ import annotations
 
+import json
 import os
 import sys
 from datetime import date, timedelta
 from pathlib import Path
 
 import httpx
+
+from irrigation_model import IrrigationModel
+from weather_agent import WeatherAgent
 
 API = os.getenv("TERRAMOIST_API", "http://127.0.0.1:8000")
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -63,6 +67,28 @@ def main() -> int:
     out = SCRIPT_DIR / "ndmi_baragan.png"
     out.write_bytes(r.content)
     print(f"Saved {out} ({len(r.content):,} bytes)")
+
+    # Agent 2: weather forecast for the centre of the same bbox.
+    try:
+        forecast = WeatherAgent().forecast_for_bbox(tuple(baragan["bbox"]))
+    except httpx.HTTPError as exc:
+        print(f"Weather API request failed: {exc}", file=sys.stderr)
+        return 1
+
+    print("Weather:", forecast.to_dict())
+
+    # Agent 3: baseline ML-style irrigation recommendation.
+    recommendation = IrrigationModel().recommend(
+        ndmi_png=r.content,
+        weather=forecast,
+    )
+    recommendation_out = SCRIPT_DIR / "irrigation_recommendation.json"
+    recommendation_out.write_text(
+        json.dumps(recommendation.to_dict(), indent=2) + "\n",
+        encoding="utf-8",
+    )
+    print("Recommendation:", recommendation.to_dict())
+    print(f"Saved {recommendation_out}")
     return 0
 
 
