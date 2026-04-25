@@ -1,44 +1,49 @@
 # Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.egg-info/
-.venv/
-venv/
-env/
-ENV/
+/web/**/__pycache__/
+/web/**/*.pyc
+/web/**/*.pyo
+/web/**/*.pyd
+/web/**/*.egg-info/
+/web/.venv/
+/web/**/.venv/
+/web/venv/
+/web/**/venv/
+/web/env/
+/web/**/env/
+/web/ENV/
+/web/**/ENV/
 
 # Node
-node_modules/
-dist/
-build/
-.vite/
-*.log
+/web/**/node_modules/
+/web/**/dist/
+/web/**/dist-ssr/
+/web/**/build/
+/web/**/.vite/
+/web/**/*.log
 
 # Environment & secrets
-.env
-.env.local
-.env.*.local
-*.env
+/web/**/.env
+/web/**/.env.local
+/web/**/.env.*.local
+/web/**/*.env
 
 # Outputs
-*.png
-ndmi_baragan.png
-*.tiff
-*.geotiff
+/web/**/*.png
+/web/**/ndmi_baragan.png
+/web/**/*.tiff
+/web/**/*.geotiff
 
 # IDE
-.vscode/
-.idea/
-*.swp
-*.swo
+/web/**/.vscode/
+/web/**/.idea/
+/web/**/*.swp
+/web/**/*.swo
 
 # OS
-.DS_Store
-Thumbs.db
-desktop.ini
+/web/**/.DS_Store
+/web/**/Thumbs.db
+/web/**/desktop.ini
 
 # Misc
-*.bak
-*.tmpgit status
+/web/**/*.bak
+/web/**/*.tmp

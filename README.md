@@ -49,12 +49,13 @@
 
 ```bash
 cd terramoist  # or wherever you cloned this
+cd web/backend
 python -m venv .venv
 source .venv/Scripts/activate    # Windows Git Bash
 # or:  source .venv/bin/activate  # macOS / Linux
 
 pip install -r requirements.txt
-cp .env.example .env
+cp ../.env.example .env
 # edit .env: paste your CDSE_CLIENT_ID and CDSE_CLIENT_SECRET
 
 uvicorn app.main:app --reload
@@ -65,6 +66,7 @@ Verify: open [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 Smoke test (in a second terminal):
 
 ```bash
+cd web/backend
 source .venv/Scripts/activate
 python scripts/smoke_test.py
 # → should save ndmi_baragan.png with a Bărăgan soil-moisture render
