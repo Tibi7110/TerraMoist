@@ -33,7 +33,179 @@ html, body, #root {
   height: 100vh;
 }
 
-/* ---------- Controls panel ---------- */
+.auth-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(360px, 460px);
+  background:
+    radial-gradient(circle at top left, rgba(88, 166, 255, 0.18), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(46, 160, 67, 0.18), transparent 32%),
+    linear-gradient(135deg, #0b1118 0%, #111923 52%, #18252d 100%);
+}
+
+.auth-hero {
+  padding: 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 24px;
+}
+
+.auth-hero__badge {
+  width: fit-content;
+  padding: 8px 12px;
+  border: 1px solid rgba(88, 166, 255, 0.35);
+  border-radius: 999px;
+  background: rgba(13, 24, 32, 0.58);
+  color: #95c9ff;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.auth-hero h1 {
+  max-width: 700px;
+  font-size: clamp(42px, 5vw, 72px);
+  line-height: 0.96;
+  letter-spacing: -0.05em;
+  color: #f5f9ff;
+}
+
+.auth-hero__lead {
+  max-width: 640px;
+  color: #b9c5d3;
+  font-size: 18px;
+}
+
+.auth-hero__highlights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.auth-hero__highlights article {
+  padding: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 18px;
+  background: rgba(10, 17, 24, 0.58);
+  backdrop-filter: blur(12px);
+}
+
+.auth-hero__highlights h2 {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #dce8f5;
+}
+
+.auth-hero__highlights p {
+  font-size: 14px;
+  color: #8ea0b2;
+}
+
+.auth-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+  padding: 36px;
+  border-left: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(8, 12, 18, 0.82);
+  backdrop-filter: blur(16px);
+}
+
+.auth-panel__switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 999px;
+  background: rgba(18, 25, 33, 0.9);
+}
+
+.auth-panel__switch button,
+.logout-btn,
+.auth-submit {
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.auth-panel__switch button {
+  padding: 12px 14px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-dim);
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.auth-panel__switch button.active {
+  background: linear-gradient(135deg, #1f7ae0 0%, #34a853 100%);
+  color: white;
+}
+
+.auth-panel__header h2 {
+  font-size: 30px;
+  margin-bottom: 8px;
+}
+
+.auth-panel__header p {
+  color: var(--text-dim);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  color: #d3deea;
+}
+
+.auth-field input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 14px;
+  background: rgba(10, 16, 24, 0.9);
+  color: #f2f6fb;
+  font: inherit;
+}
+
+.auth-field input:focus {
+  outline: none;
+  border-color: #58a6ff;
+  box-shadow: 0 0 0 4px rgba(88, 166, 255, 0.12);
+}
+
+.auth-error {
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 120, 120, 0.28);
+  border-radius: 12px;
+  background: rgba(103, 25, 25, 0.28);
+  color: #ffb4b4;
+  font-size: 13px;
+}
+
+.auth-submit {
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #58a6ff 0%, #2ea043 100%);
+  color: white;
+  font-weight: 700;
+}
+
+.auth-submit:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
 .controls {
   background: var(--panel);
   border-right: 1px solid var(--panel-border);
@@ -72,6 +244,44 @@ html, body, #root {
   color: var(--blue);
 }
 
+.account-card {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid rgba(88, 166, 255, 0.18);
+  border-radius: 12px;
+  background: rgba(10, 16, 24, 0.6);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.account-card__label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+}
+
+.account-card__name {
+  display: block;
+  margin-top: 4px;
+  font-size: 15px;
+}
+
+.account-card__email {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.logout-btn {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(88, 166, 255, 0.12);
+  color: var(--blue);
+}
+
 .controls__section h2 {
   font-size: 11px;
   font-weight: 600;
@@ -81,7 +291,181 @@ html, body, #root {
   margin-bottom: 10px;
 }
 
-/* ---------- Layer buttons ---------- */
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.section-meta {
+  color: var(--blue);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.status-pill {
+  padding: 4px 9px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 999px;
+  color: var(--text-dim);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.status-pill.active {
+  border-color: rgba(247, 201, 72, 0.32);
+  background: rgba(247, 201, 72, 0.12);
+  color: #f7db7f;
+}
+
+.status-pill.error {
+  border-color: rgba(255, 100, 100, 0.35);
+  background: rgba(255, 80, 80, 0.12);
+  color: #ffb4b4;
+}
+
+.error-card {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 100, 100, 0.28);
+  background: rgba(100, 20, 20, 0.35);
+}
+
+.error-card strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #ffb4b4;
+}
+
+.error-card p {
+  color: #ffd0d0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.parcel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.action-btn {
+  padding: 9px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.action-btn:hover:not(:disabled) {
+  border-color: var(--blue);
+  background: rgba(88, 166, 255, 0.08);
+}
+
+.action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.action-btn--primary {
+  border-color: rgba(46, 160, 67, 0.35);
+  background: rgba(46, 160, 67, 0.16);
+  color: #c7f1d0;
+}
+
+.action-btn--primary:hover:not(:disabled) {
+  border-color: var(--accent-hover);
+  background: rgba(63, 185, 80, 0.2);
+}
+
+.action-btn--danger {
+  margin-top: 12px;
+  border-color: rgba(255, 107, 107, 0.28);
+  color: #ffb4b4;
+}
+
+.drawing-card,
+.empty-card,
+.selected-parcel-card,
+.analysis-card {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(88, 166, 255, 0.14);
+  background: rgba(10, 16, 24, 0.55);
+}
+
+.drawing-card strong,
+.selected-parcel-card strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.drawing-card p,
+.empty-card,
+.selected-parcel-card p,
+.analysis-card p {
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.analysis-card strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.parcel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.parcel-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.parcel-card strong {
+  font-size: 13px;
+}
+
+.parcel-card span {
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.parcel-card:hover {
+  border-color: var(--blue);
+  background: rgba(88, 166, 255, 0.05);
+}
+
+.parcel-card.active {
+  border-color: rgba(63, 185, 80, 0.5);
+  background: rgba(46, 160, 67, 0.14);
+}
+
 .layer-list {
   display: flex;
   flex-direction: column;
@@ -102,6 +486,11 @@ html, body, #root {
 .layer-btn:hover {
   border-color: var(--blue);
   background: rgba(88, 166, 255, 0.05);
+}
+
+.layer-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .layer-btn.active {
@@ -130,7 +519,6 @@ html, body, #root {
   border-left: 2px solid var(--blue);
 }
 
-/* ---------- Date input ---------- */
 .date-input {
   width: 100%;
   background: var(--bg);
@@ -154,7 +542,10 @@ html, body, #root {
   margin-top: 6px;
 }
 
-/* ---------- Preset region grid ---------- */
+.section-disabled {
+  opacity: 0.64;
+}
+
 .preset-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -177,7 +568,6 @@ html, body, #root {
   border-color: var(--blue);
 }
 
-/* ---------- Legend ---------- */
 .legend {
   display: flex;
   flex-direction: column;
@@ -198,7 +588,6 @@ html, body, #root {
   border: 1px solid var(--panel-border);
 }
 
-/* ---------- Footer ---------- */
 .controls__footer {
   margin-top: auto;
   padding-top: 16px;
@@ -208,7 +597,6 @@ html, body, #root {
   line-height: 1.6;
 }
 
-/* ---------- Map area ---------- */
 .map-area {
   position: relative;
 }
@@ -219,7 +607,6 @@ html, body, #root {
   background: var(--bg);
 }
 
-/* Make Leaflet attribution match the dark theme. */
 .leaflet-control-attribution {
   background: rgba(22, 27, 34, 0.85) !important;
   color: var(--text-dim) !important;
@@ -230,12 +617,34 @@ html, body, #root {
   color: var(--blue) !important;
 }
 
-/* ---------- Responsive ---------- */
+.map-canvas--drawing .leaflet-control-container {
+  opacity: 0.92;
+}
+
 @media (max-width: 768px) {
+  .auth-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-hero {
+    padding: 28px 20px 18px;
+  }
+
+  .auth-hero__highlights {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-panel {
+    padding: 20px;
+    border-left: none;
+    border-top: 1px solid rgba(148, 163, 184, 0.14);
+  }
+
   .app {
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr;
   }
+
   .controls {
     border-right: none;
     border-bottom: 1px solid var(--panel-border);
