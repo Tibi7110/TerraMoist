@@ -1,8 +1,8 @@
-"""Baseline irrigation recommendation model for the smoke-test pipeline.
+"""FAO-56 style irrigation recommendation model for the smoke-test pipeline.
 
 This is intentionally dependency-free. It estimates moisture from the rendered
 NDMI PNG by mapping the known evalscript colours back to dry/wet classes, then
-combines that signal with weather forecast pressure.
+runs a daily water balance using Open-Meteo FAO ET0 and precipitation.
 """
 from __future__ import annotations
 
@@ -23,37 +23,88 @@ class MoistureFeatures:
     valid_pixel_ratio: float
     moisture_score: float
     dry_pixel_ratio: float
+    initial_water_deficit_mm: float
 
     def to_dict(self) -> dict[str, float]:
         return {
             "valid_pixel_ratio": round(self.valid_pixel_ratio, 4),
             "moisture_score": round(self.moisture_score, 4),
             "dry_pixel_ratio": round(self.dry_pixel_ratio, 4),
+            "initial_water_deficit_mm": round(self.initial_water_deficit_mm, 2),
+        }
+
+
+@dataclass(frozen=True)
+class DailyWaterBalanceEntry:
+    date: str
+    previous_deficit_mm: float
+    et0_mm: float
+    precipitation_mm: float
+    irrigation_mm: float
+    deficit_mm: float
+
+    def to_dict(self) -> dict[str, float | str]:
+        return {
+            "date": self.date,
+            "previous_deficit_mm": round(self.previous_deficit_mm, 2),
+            "et0_mm": round(self.et0_mm, 2),
+            "precipitation_mm": round(self.precipitation_mm, 2),
+            "irrigation_mm": round(self.irrigation_mm, 2),
+            "deficit_mm": round(self.deficit_mm, 2),
+        }
+
+
+@dataclass(frozen=True)
+class WaterBalance:
+    initial_deficit_mm: float
+    final_deficit_mm: float
+    irrigation_threshold_mm: float
+    max_deficit_mm: float
+    daily: tuple[DailyWaterBalanceEntry, ...]
+
+    def to_dict(self) -> dict:
+        return {
+            "formula": "Water Deficit(t) = Water Deficit(t-1) + ET0 - Precipitation - Irrigation",
+            "initial_deficit_mm": round(self.initial_deficit_mm, 2),
+            "final_deficit_mm": round(self.final_deficit_mm, 2),
+            "irrigation_threshold_mm": round(self.irrigation_threshold_mm, 2),
+            "max_deficit_mm": round(self.max_deficit_mm, 2),
+            "daily": [entry.to_dict() for entry in self.daily],
         }
 
 
 @dataclass(frozen=True)
 class IrrigationRecommendation:
     should_irrigate: bool
-    irrigation_need_score: float
     label: str
     reason: str
+    recommended_irrigation_mm: float
     moisture: MoistureFeatures
+    water_balance: WaterBalance
     weather: "WeatherForecast"
 
     def to_dict(self) -> dict:
         return {
             "should_irrigate": self.should_irrigate,
-            "irrigation_need_score": round(self.irrigation_need_score, 4),
             "label": self.label,
             "reason": self.reason,
+            "recommended_irrigation_mm": round(self.recommended_irrigation_mm, 2),
             "moisture": self.moisture.to_dict(),
+            "water_balance": self.water_balance.to_dict(),
             "weather": self.weather.to_dict(),
         }
 
 
 class IrrigationModel:
-    """Small baseline model that can later be replaced with trained weights."""
+    """FAO-56 daily water balance model.
+
+    The smoke test does not yet know crop type, root depth, soil texture, or
+    field capacity. Until those exist, NDMI initializes a bounded deficit
+    estimate and FAO ET0/precipitation drive the daily calculation.
+    """
+
+    max_deficit_mm = 60.0
+    irrigation_threshold_mm = 35.0
 
     # RGB values produced by NDMI_EVALSCRIPT, with a dry->wet score.
     _NDMI_PALETTE: tuple[tuple[tuple[int, int, int], float], ...] = (
@@ -70,38 +121,80 @@ class IrrigationModel:
         *,
         ndmi_png: bytes,
         weather: "WeatherForecast",
+        irrigation_by_day_mm: tuple[float, ...] | None = None,
     ) -> IrrigationRecommendation:
         moisture = self.extract_moisture_features(ndmi_png)
-        drying_deficit_mm = max(0.0, -weather.water_balance_next_7d_mm)
-        weather_pressure = _clamp(drying_deficit_mm / 30.0)
-        heat_pressure = _clamp((weather.avg_max_temp_next_7d_c - 28.0) / 10.0)
-        satellite_stress = 1.0 - moisture.moisture_score
-
-        score = (
-            0.60 * satellite_stress
-            + 0.30 * weather_pressure
-            + 0.10 * heat_pressure
+        water_balance = self.calculate_daily_water_balance(
+            weather=weather,
+            initial_deficit_mm=moisture.initial_water_deficit_mm,
+            irrigation_by_day_mm=irrigation_by_day_mm,
         )
-        score = _clamp(score)
-
-        enough_rain_soon = weather.precipitation_next_3d_mm >= 8.0
-        should_irrigate = score >= 0.55 and not enough_rain_soon
+        should_irrigate = (
+            water_balance.final_deficit_mm >= water_balance.irrigation_threshold_mm
+        )
         label = "irrigate" if should_irrigate else "hold"
+        recommended_irrigation_mm = (
+            water_balance.final_deficit_mm
+            if should_irrigate
+            else 0.0
+        )
 
-        if enough_rain_soon:
-            reason = "Rain forecast in the next 3 days is high enough to delay irrigation."
-        elif should_irrigate:
-            reason = "NDMI indicates moisture stress and the 7-day forecast has drying pressure."
+        if should_irrigate:
+            reason = (
+                "FAO-56 water balance projects the field above the allowed "
+                "deficit threshold."
+            )
         else:
-            reason = "Current moisture and forecast do not cross the irrigation threshold."
+            reason = "FAO-56 water balance stays below the irrigation threshold."
 
         return IrrigationRecommendation(
             should_irrigate=should_irrigate,
-            irrigation_need_score=score,
             label=label,
             reason=reason,
+            recommended_irrigation_mm=recommended_irrigation_mm,
             moisture=moisture,
+            water_balance=water_balance,
             weather=weather,
+        )
+
+    def calculate_daily_water_balance(
+        self,
+        *,
+        weather: "WeatherForecast",
+        initial_deficit_mm: float,
+        irrigation_by_day_mm: tuple[float, ...] | None = None,
+    ) -> WaterBalance:
+        irrigation = irrigation_by_day_mm or tuple(0.0 for _ in weather.daily_dates)
+        daily: list[DailyWaterBalanceEntry] = []
+        deficit = initial_deficit_mm
+
+        for idx, date in enumerate(weather.daily_dates):
+            previous = deficit
+            et0 = weather.daily_et0_mm[idx]
+            precipitation = weather.daily_precipitation_mm[idx]
+            irrigation_mm = irrigation[idx] if idx < len(irrigation) else 0.0
+            deficit = _clamp(
+                previous + et0 - precipitation - irrigation_mm,
+                lower=0.0,
+                upper=self.max_deficit_mm,
+            )
+            daily.append(
+                DailyWaterBalanceEntry(
+                    date=date,
+                    previous_deficit_mm=previous,
+                    et0_mm=et0,
+                    precipitation_mm=precipitation,
+                    irrigation_mm=irrigation_mm,
+                    deficit_mm=deficit,
+                )
+            )
+
+        return WaterBalance(
+            initial_deficit_mm=initial_deficit_mm,
+            final_deficit_mm=deficit,
+            irrigation_threshold_mm=self.irrigation_threshold_mm,
+            max_deficit_mm=self.max_deficit_mm,
+            daily=tuple(daily),
         )
 
     def extract_moisture_features(self, png_bytes: bytes) -> MoistureFeatures:
@@ -125,12 +218,15 @@ class IrrigationModel:
                 valid_pixel_ratio=0.0,
                 moisture_score=0.0,
                 dry_pixel_ratio=0.0,
+                initial_water_deficit_mm=self.max_deficit_mm,
             )
 
+        moisture_score = score_sum / valid
         return MoistureFeatures(
             valid_pixel_ratio=valid / total,
-            moisture_score=score_sum / valid,
+            moisture_score=moisture_score,
             dry_pixel_ratio=dry / valid,
+            initial_water_deficit_mm=(1.0 - moisture_score) * self.max_deficit_mm,
         )
 
     def _nearest_ndmi_score(self, red: int, green: int, blue: int) -> float:

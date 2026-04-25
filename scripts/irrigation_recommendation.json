@@ -1,0 +1,132 @@
+{
+  "should_irrigate": true,
+  "label": "irrigate",
+  "reason": "FAO-56 water balance projects the field above the allowed deficit threshold.",
+  "recommended_irrigation_mm": 56.96,
+  "moisture": {
+    "valid_pixel_ratio": 0.9973,
+    "moisture_score": 0.4502,
+    "dry_pixel_ratio": 0.381,
+    "initial_water_deficit_mm": 32.99
+  },
+  "water_balance": {
+    "formula": "Water Deficit(t) = Water Deficit(t-1) + ET0 - Precipitation - Irrigation",
+    "initial_deficit_mm": 32.99,
+    "final_deficit_mm": 56.96,
+    "irrigation_threshold_mm": 35.0,
+    "max_deficit_mm": 60.0,
+    "daily": [
+      {
+        "date": "2026-04-25",
+        "previous_deficit_mm": 32.99,
+        "et0_mm": 4.26,
+        "precipitation_mm": 0.0,
+        "irrigation_mm": 0.0,
+        "deficit_mm": 37.25
+      },
+      {
+        "date": "2026-04-26",
+        "previous_deficit_mm": 37.25,
+        "et0_mm": 5.55,
+        "precipitation_mm": 0.0,
+        "irrigation_mm": 0.0,
+        "deficit_mm": 42.8
+      },
+      {
+        "date": "2026-04-27",
+        "previous_deficit_mm": 42.8,
+        "et0_mm": 4.12,
+        "precipitation_mm": 0.0,
+        "irrigation_mm": 0.0,
+        "deficit_mm": 46.92
+      },
+      {
+        "date": "2026-04-28",
+        "previous_deficit_mm": 46.92,
+        "et0_mm": 4.23,
+        "precipitation_mm": 0.0,
+        "irrigation_mm": 0.0,
+        "deficit_mm": 51.15
+      },
+      {
+        "date": "2026-04-29",
+        "previous_deficit_mm": 51.15,
+        "et0_mm": 1.39,
+        "precipitation_mm": 1.8,
+        "irrigation_mm": 0.0,
+        "deficit_mm": 50.74
+      },
+      {
+        "date": "2026-04-30",
+        "previous_deficit_mm": 50.74,
+        "et0_mm": 3.4,
+        "precipitation_mm": 0.6,
+        "irrigation_mm": 0.0,
+        "deficit_mm": 53.54
+      },
+      {
+        "date": "2026-05-01",
+        "previous_deficit_mm": 53.54,
+        "et0_mm": 3.42,
+        "precipitation_mm": 0.0,
+        "irrigation_mm": 0.0,
+        "deficit_mm": 56.96
+      }
+    ]
+  },
+  "weather": {
+    "latitude": 44.625,
+    "longitude": 27.4,
+    "forecast_days": 7,
+    "daily": [
+      {
+        "date": "2026-04-25",
+        "precipitation_mm": 0.0,
+        "et0_fao_mm": 4.26,
+        "max_temp_c": 21.0
+      },
+      {
+        "date": "2026-04-26",
+        "precipitation_mm": 0.0,
+        "et0_fao_mm": 5.55,
+        "max_temp_c": 25.8
+      },
+      {
+        "date": "2026-04-27",
+        "precipitation_mm": 0.0,
+        "et0_fao_mm": 4.12,
+        "max_temp_c": 16.3
+      },
+      {
+        "date": "2026-04-28",
+        "precipitation_mm": 0.0,
+        "et0_fao_mm": 4.23,
+        "max_temp_c": 20.0
+      },
+      {
+        "date": "2026-04-29",
+        "precipitation_mm": 1.8,
+        "et0_fao_mm": 1.39,
+        "max_temp_c": 10.5
+      },
+      {
+        "date": "2026-04-30",
+        "precipitation_mm": 0.6,
+        "et0_fao_mm": 3.4,
+        "max_temp_c": 15.3
+      },
+      {
+        "date": "2026-05-01",
+        "precipitation_mm": 0.0,
+        "et0_fao_mm": 3.42,
+        "max_temp_c": 14.8
+      }
+    ],
+    "precipitation_next_3d_mm": 0.0,
+    "precipitation_next_7d_mm": 2.4,
+    "evapotranspiration_next_7d_mm": 26.37,
+    "avg_max_temp_next_7d_c": 17.67,
+    "max_temp_next_7d_c": 25.8,
+    "water_balance_next_7d_mm": -23.97
+  }
+}

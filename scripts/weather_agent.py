@@ -22,6 +22,10 @@ class WeatherForecast:
     latitude: float
     longitude: float
     forecast_days: int
+    daily_dates: tuple[str, ...]
+    daily_precipitation_mm: tuple[float, ...]
+    daily_et0_mm: tuple[float, ...]
+    daily_max_temp_c: tuple[float, ...]
     precipitation_next_3d_mm: float
     precipitation_next_7d_mm: float
     evapotranspiration_next_7d_mm: float
@@ -33,11 +37,25 @@ class WeatherForecast:
         """Positive means rain exceeds ET0, negative means drying pressure."""
         return self.precipitation_next_7d_mm - self.evapotranspiration_next_7d_mm
 
-    def to_dict(self) -> dict[str, float | int]:
+    def to_dict(self) -> dict:
         return {
             "latitude": self.latitude,
             "longitude": self.longitude,
             "forecast_days": self.forecast_days,
+            "daily": [
+                {
+                    "date": date,
+                    "precipitation_mm": round(precipitation, 2),
+                    "et0_fao_mm": round(et0, 2),
+                    "max_temp_c": round(max_temp, 2),
+                }
+                for date, precipitation, et0, max_temp in zip(
+                    self.daily_dates,
+                    self.daily_precipitation_mm,
+                    self.daily_et0_mm,
+                    self.daily_max_temp_c,
+                )
+            ],
             "precipitation_next_3d_mm": round(self.precipitation_next_3d_mm, 2),
             "precipitation_next_7d_mm": round(self.precipitation_next_7d_mm, 2),
             "evapotranspiration_next_7d_mm": round(
@@ -100,6 +118,7 @@ class WeatherAgent:
         response.raise_for_status()
         daily = response.json()["daily"]
 
+        dates = tuple(str(x) for x in daily["time"])
         precipitation = [float(x or 0) for x in daily["precipitation_sum"]]
         evapotranspiration = [
             float(x or 0) for x in daily["et0_fao_evapotranspiration"]
@@ -110,6 +129,10 @@ class WeatherAgent:
             latitude=latitude,
             longitude=longitude,
             forecast_days=forecast_days,
+            daily_dates=dates[:forecast_days],
+            daily_precipitation_mm=tuple(precipitation[:forecast_days]),
+            daily_et0_mm=tuple(evapotranspiration[:forecast_days]),
+            daily_max_temp_c=tuple(max_temps[:forecast_days]),
             precipitation_next_3d_mm=sum(precipitation[:3]),
             precipitation_next_7d_mm=sum(precipitation[:7]),
             evapotranspiration_next_7d_mm=sum(evapotranspiration[:7]),
