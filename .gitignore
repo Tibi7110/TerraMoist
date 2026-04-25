@@ -1,21 +1,44 @@
-# Environment
-.env
-.venv/
-venv/
-
 # Python
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
 *.egg-info/
+.venv/
+venv/
+env/
+ENV/
+
+# Node
+node_modules/
+dist/
+build/
+.vite/
+*.log
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+*.env
 
 # Outputs
 *.png
 ndmi_baragan.png
+*.tiff
+*.geotiff
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
 
 # OS
 .DS_Store
+Thumbs.db
+desktop.ini
+
+# Misc
+*.bak
+*.tmpgit status
