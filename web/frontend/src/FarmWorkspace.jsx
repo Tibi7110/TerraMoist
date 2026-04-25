@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import MapView from "./MapView";
 import LayerControls from "./LayerControls";
 import { LAYERS, PRESETS } from "./config";
+import { fetchIrrigationRecommendation } from "./analysisApi";
 import {
+  addIrrigationEvent,
   createParcel,
   getParcelAreaHectares,
   getParcelBounds,
   loadParcelsForUser,
   saveParcelsForUser,
+  updateParcelPlantType,
 } from "./parcels";
 
 function defaultDate() {
@@ -29,6 +32,10 @@ export default function FarmWorkspace({ currentUser, onLogout }) {
   });
   const [analysisParcelId, setAnalysisParcelId] = useState(null);
   const [analysisError, setAnalysisError] = useState(null);
+  const [irrigationRecommendation, setIrrigationRecommendation] = useState(null);
+  const [irrigationLoading, setIrrigationLoading] = useState(false);
+  const [irrigationError, setIrrigationError] = useState(null);
+  const [recommendationRefreshKey, setRecommendationRefreshKey] = useState(0);
   const [isDrawingParcel, setIsDrawingParcel] = useState(false);
   const [draftParcelPoints, setDraftParcelPoints] = useState([]);
 
@@ -41,6 +48,49 @@ export default function FarmWorkspace({ currentUser, onLogout }) {
     setParcels(nextParcels);
     saveParcelsForUser(currentUser.id, nextParcels);
   }
+
+  useEffect(() => {
+    if (!selectedParcel || isDrawingParcel) {
+      setIrrigationRecommendation(null);
+      setIrrigationError(null);
+      setIrrigationLoading(false);
+      return undefined;
+    }
+
+    let cancelled = false;
+    setIrrigationLoading(true);
+    setIrrigationError(null);
+
+    fetchIrrigationRecommendation({ parcel: selectedParcel })
+      .then((recommendation) => {
+        if (cancelled) {
+          return;
+        }
+        setIrrigationRecommendation(recommendation);
+      })
+      .catch((error) => {
+        if (cancelled) {
+          return;
+        }
+        setIrrigationRecommendation(null);
+        setIrrigationError(error.message);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIrrigationLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    selectedParcel?.id,
+    selectedParcel?.plantType,
+    JSON.stringify(selectedParcel?.irrigationEvents ?? []),
+    recommendationRefreshKey,
+    isDrawingParcel,
+  ]);
 
   function handleStartParcelDrawing() {
     setIsDrawingParcel(true);
@@ -117,6 +167,26 @@ export default function FarmWorkspace({ currentUser, onLogout }) {
     setAnalysisError(null);
   }
 
+  function handlePlantTypeChange(plantType) {
+    if (!selectedParcel) {
+      return;
+    }
+
+    persistParcels(updateParcelPlantType(parcels, selectedParcel.id, plantType));
+  }
+
+  function handleIrrigateSelectedParcel() {
+    if (!selectedParcel) {
+      return;
+    }
+
+    persistParcels(addIrrigationEvent(parcels, selectedParcel.id));
+  }
+
+  function handleRefreshRecommendation() {
+    setRecommendationRefreshKey((current) => current + 1);
+  }
+
   return (
     <div className="app">
       <LayerControls
@@ -146,6 +216,9 @@ export default function FarmWorkspace({ currentUser, onLogout }) {
             }
           : null}
         analysisError={analysisError}
+        irrigationRecommendation={irrigationRecommendation}
+        irrigationLoading={irrigationLoading}
+        irrigationError={irrigationError}
         isDrawingParcel={isDrawingParcel}
         draftPointCount={draftParcelPoints.length}
         onStartParcelDrawing={handleStartParcelDrawing}
@@ -156,6 +229,9 @@ export default function FarmWorkspace({ currentUser, onLogout }) {
         onDeleteSelectedParcel={handleDeleteSelectedParcel}
         onStartAnalysis={handleStartAnalysis}
         onStopAnalysis={handleStopAnalysis}
+        onPlantTypeChange={handlePlantTypeChange}
+        onIrrigateSelectedParcel={handleIrrigateSelectedParcel}
+        onRefreshRecommendation={handleRefreshRecommendation}
       />
       <main className="map-area">
         <MapView

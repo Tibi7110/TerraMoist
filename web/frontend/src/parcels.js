@@ -1,5 +1,6 @@
 const PARCEL_STORAGE_PREFIX = "terramoist.parcels";
 const EARTH_RADIUS_METERS = 6378137;
+const DEFAULT_PLANT_TYPE = "wheat";
 
 function storageKey(userId) {
   return `${PARCEL_STORAGE_PREFIX}.${userId}`;
@@ -13,7 +14,7 @@ export function loadParcelsForUser(userId) {
 
   try {
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? parsed.map(normalizeParcel) : [];
   } catch {
     return [];
   }
@@ -29,7 +30,47 @@ export function createParcel(points, parcelCount) {
     id: `parcel-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     name: `Parcel ${safeCount}`,
     points,
+    plantType: DEFAULT_PLANT_TYPE,
+    irrigationEvents: [],
     createdAt: new Date().toISOString(),
+  };
+}
+
+export function updateParcelPlantType(parcels, parcelId, plantType) {
+  return parcels.map((parcel) =>
+    parcel.id === parcelId
+      ? { ...parcel, plantType }
+      : parcel
+  );
+}
+
+export function addIrrigationEvent(parcels, parcelId, amountMm = 10) {
+  return parcels.map((parcel) => {
+    if (parcel.id !== parcelId) {
+      return parcel;
+    }
+
+    return {
+      ...parcel,
+      irrigationEvents: [
+        ...(parcel.irrigationEvents ?? []),
+        {
+          id: `irrigation-${Date.now()}`,
+          amountMm,
+          appliedAt: new Date().toISOString(),
+        },
+      ],
+    };
+  });
+}
+
+function normalizeParcel(parcel) {
+  return {
+    ...parcel,
+    plantType: parcel.plantType ?? DEFAULT_PLANT_TYPE,
+    irrigationEvents: Array.isArray(parcel.irrigationEvents)
+      ? parcel.irrigationEvents
+      : [],
   };
 }
 

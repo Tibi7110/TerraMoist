@@ -12,10 +12,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.auth_routes import router as auth_router
+from app.api.irrigation_routes import router as irrigation_router
 from app.api.routes import router as api_router
 from app.core.config import get_settings
 from app.services.auth import AuthService
 from app.services.cdse_auth import CDSETokenManager
+from app.services.irrigation import IrrigationEngine, IrrigationHistoryStore
 from app.services.sentinel_hub import SentinelHubClient
 
 logging.basicConfig(
@@ -41,12 +43,15 @@ async def lifespan(app: FastAPI):
         secret_key=settings.auth_secret_key,
         token_ttl_seconds=settings.auth_token_ttl_seconds,
     )
+    irrigation_store = IrrigationHistoryStore(settings.auth_db_path)
+    irrigation_engine = IrrigationEngine(irrigation_store)
 
     app.state.settings = settings
     app.state.http_client = http_client
     app.state.token_manager = token_manager
     app.state.sentinel_hub = sh_client
     app.state.auth_service = auth_service
+    app.state.irrigation_engine = irrigation_engine
 
     logger.info("TerraMoist backend ready")
     try:
@@ -76,6 +81,7 @@ app.add_middleware(
 
 app.include_router(api_router)
 app.include_router(auth_router)
+app.include_router(irrigation_router)
 
 
 @app.get("/")

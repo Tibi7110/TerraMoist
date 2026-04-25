@@ -42,3 +42,27 @@ export async function fetchParcelAnalysisImage({
   const blob = await response.blob();
   return URL.createObjectURL(blob);
 }
+
+export async function fetchIrrigationRecommendation({ parcel }) {
+  const response = await fetch(`${getApiBase()}/irrigation/recommend`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      fieldId: parcel.id,
+      fieldName: parcel.name,
+      points: parcel.points,
+      plantType: parcel.plantType,
+      irrigationEvents: parcel.irrigationEvents ?? [],
+      lookbackDays: 10,
+    }),
+  });
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null);
+    throw new Error(payload?.detail ?? "Failed to generate irrigation recommendation");
+  }
+
+  return response.json();
+}
