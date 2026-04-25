@@ -59,4 +59,4 @@ source .venv/Scripts/activate
 python scripts/smoke_test.py
 ```
 
-If configured, `ndmi_baragan.png` appears in the working directory.
+If configured, `ndmi_baragan.png` appears in the working directory.# TerraMoist
