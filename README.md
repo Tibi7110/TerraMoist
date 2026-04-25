@@ -1,63 +1,89 @@
-# TerraMoist Backend
+**Two paths to satellite data:**
+1. **Frontend → CDSE WMS direct** — for interactive map tiles. Public, scalable, cached by Sentinel Hub.
+2. **Backend → CDSE Process API** — for on-demand renders, time-series statistics, and operations that require server-side credentials.
 
-FastAPI service that serves soil-moisture tiles on top of the **Copernicus Data Space Ecosystem (CDSE)**.
+---
 
-## Stack
+## ✨ Features (current)
 
-- **FastAPI** — async HTTP framework
-- **httpx** — async client for CDSE OAuth + Sentinel Hub Process API
-- **Pydantic v2** — request/response validation
-- **CDSE Sentinel Hub Process API** — on-the-fly raster generation using custom evalscripts
+- 🌍 **Global interactive map** — zoom from planetary view to individual fields
+- 🎚️ **Layer switcher** — NDMI, SAR moisture, true color, NDVI
+- 📅 **Date picker** with intelligent ±10-day mosaicking window for cloud-free composites
+- 📍 **Preset regions** for fast demos: Bărăgan, Dobrogea, Romania, Europe
+- 🎨 **Color-coded legend** — intuitive dry → wet ramp (brown → blue)
+- 🛰️ **End-to-end EU stack** — every byte flows through Copernicus
 
-No third-party re-hosters (no GEE). End-to-end EU stack.
+## 🚧 In progress
 
-## Endpoints
+- ✏️ **Field drawing tool** — farmers define their own AOI by clicking polygon vertices on the map
+- 📊 **Time-series chart** — NDMI evolution per field over the last 6 months
+- 💧 **Irrigation recommendations** — automated alerts when fields cross a moisture threshold
+- 🔬 **Ground-truth validation** — cross-check against ISMN / SMAP reference sites
 
-| Method | Path | Purpose |
-|---|---|---|
-| GET  | `/api/v1/health`  | Liveness + config check |
-| GET  | `/api/v1/regions` | List preset demo regions (Bărăgan, Dobrogea) |
-| POST | `/api/v1/tiles`   | Returns a PNG for `{index, bbox, date_from, date_to}` |
+---
 
-Supported indices: `ndmi` (Sentinel-2), `sar_moisture` (Sentinel-1 VV), `true_color` (Sentinel-2).
+## 🔧 Tech stack
 
-## Setup
+| Layer | Technology |
+|---|---|
+| Frontend | React 18, Vite, react-leaflet, Leaflet |
+| Backend | Python 3.11+, FastAPI, httpx (async), Pydantic v2 |
+| Data | Sentinel-1 GRD, Sentinel-2 L2A via Copernicus Data Space Ecosystem |
+| Auth | OAuth2 client_credentials with token caching & 60s refresh buffer |
+| Indices | Custom JavaScript evalscripts running inside Sentinel Hub |
+| Deploy | (Local dev for hackathon — Vercel/Railway compatible) |
 
-### 1. Get CDSE OAuth credentials
+---
 
-1. Log in at https://dataspace.copernicus.eu
-2. Hover the profile icon (top right) → click **Sentinel Hub** to open the Sentinel Hub dashboard
-3. Go to **User Settings** → **OAuth clients** → **Create**
-4. Name: `terramoist-backend`, Supported flow: **Client Credentials**
-5. Copy `client_id` and `client_secret` — the secret is shown ONCE
+## 🚀 Run locally
 
-### 2. Install
+### Prerequisites
+
+- Python 3.11+
+- Node.js 18+
+- A free [Copernicus Data Space Ecosystem](https://dataspace.copernicus.eu) account
+- An OAuth client created in the [Sentinel Hub Dashboard](https://shapps.dataspace.copernicus.eu/dashboard) (User Settings → OAuth clients → Client Credentials flow)
+- A Sentinel Hub WMS Configuration with three layers: `MOISTURE_INDEX`, `SAR_MOISTURE`, `TRUE_COLOR`
+
+### 1. Backend
 
 ```bash
-cd terramoist-backend
+cd terramoist  # or wherever you cloned this
 python -m venv .venv
-source .venv/Scripts/activate      # Windows Git Bash
+source .venv/Scripts/activate    # Windows Git Bash
+# or:  source .venv/bin/activate  # macOS / Linux
+
 pip install -r requirements.txt
 cp .env.example .env
-# edit .env → paste CDSE_CLIENT_ID and CDSE_CLIENT_SECRET
-```
+# edit .env: paste your CDSE_CLIENT_ID and CDSE_CLIENT_SECRET
 
-### 3. Run
-
-```bash
 uvicorn app.main:app --reload
 ```
 
-Open http://127.0.0.1:8000/docs for interactive Swagger UI.
+Verify: open [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
-### 4. Smoke test
-
-In a second terminal (keep uvicorn running):
+Smoke test (in a second terminal):
 
 ```bash
 source .venv/Scripts/activate
 python scripts/smoke_test.py
+# → should save ndmi_baragan.png with a Bărăgan soil-moisture render
 ```
 
-If configured, `ndmi_baragan.png` appears in the working directory.# TerraMoist
-# TerraMoist
+### 2. Frontend
+
+```bash
+cd frontend
+npm install
+
+# Edit src/config.js and paste YOUR Sentinel Hub Configuration Instance ID
+# (the UUID from the Configuration Utility → terramoist-public)
+
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173) and click **🌾 Bărăgan** to see live tiles.
+
+---
+
+## 📁 Project structure
