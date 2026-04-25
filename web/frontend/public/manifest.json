@@ -1,0 +1,18 @@
+{
+  "name": "TerraMoist — Precision Water for Sustainable Farming",
+  "short_name": "TerraMoist",
+  "description": "Satellite soil moisture maps for precision irrigation",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f1117",
+  "theme_color": "#26a040",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

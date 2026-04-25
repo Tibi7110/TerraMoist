@@ -27,6 +27,13 @@ html, body, #root {
   overflow: hidden;
 }
 
+@media (max-width: 768px) {
+  html, body, #root {
+    overflow: auto;
+    height: auto;
+  }
+}
+
 .app {
   display: grid;
   grid-template-columns: 340px 1fr;
@@ -724,6 +731,9 @@ html, body, #root {
 @media (max-width: 768px) {
   .auth-shell {
     grid-template-columns: 1fr;
+    overflow-y: auto;
+    min-height: 100vh;
+    height: auto;
   }
 
   .auth-hero {
@@ -738,6 +748,9 @@ html, body, #root {
     padding: 20px;
     border-left: none;
     border-top: 1px solid rgba(148, 163, 184, 0.14);
+    overflow-y: auto;
+    max-height: none;
+    padding-bottom: 40px;
   }
 
   .app {
