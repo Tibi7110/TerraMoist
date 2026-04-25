@@ -43,3 +43,22 @@ class HealthResponse(BaseModel):
 
     status: Literal["ok"]
     cdse_configured: bool
+
+
+class PushKeys(BaseModel):
+    """Web Push subscription keys."""
+    p256dh: str
+    auth: str
+
+
+class PushSubscription(BaseModel):
+    """Browser push subscription object sent from the frontend."""
+    endpoint: str
+    keys: PushKeys
+
+
+class PushSendRequest(BaseModel):
+    """Body for manually triggering a push to all subscribers."""
+    title: str = "TerraMoist Alert"
+    body: str
+    url: str = "/"
