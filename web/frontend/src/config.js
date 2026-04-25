@@ -41,6 +41,15 @@ export const PRESETS = [
   { id: "dobrogea", name: "Dobrogea", bounds: [[43.8, 28.0], [44.3, 28.7]] },
 ];
 
+export const PLANT_TYPES = [
+  { id: "wheat", label: "Wheat", cropCoefficient: 1.15 },
+  { id: "corn", label: "Corn", cropCoefficient: 1.2 },
+  { id: "sunflower", label: "Sunflower", cropCoefficient: 1.0 },
+  { id: "soybean", label: "Soybean", cropCoefficient: 1.05 },
+  { id: "vegetables", label: "Vegetables", cropCoefficient: 1.1 },
+  { id: "other", label: "Other crop", cropCoefficient: 1.0 },
+];
+
 export const MOISTURE_LEGEND = [
   { color: "rgb(140, 69, 18)", label: "Very dry" },
   { color: "rgb(217, 166, 33)", label: "Dry" },

@@ -51,3 +51,5 @@
 /web/**/*.db-shm
 /web/**/*.db-wal
 /web/**/*.tmp
+
+AGENTS.md

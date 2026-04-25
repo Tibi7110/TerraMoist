@@ -1,6 +1,7 @@
 import {
   LAYERS,
   PRESETS,
+  PLANT_TYPES,
   MOISTURE_LEGEND,
   VEGETATION_LEGEND,
 } from "./config";
@@ -13,6 +14,20 @@ function formatHectares(value) {
     return `${value.toFixed(1)} ha`;
   }
   return `${Math.round(value)} ha`;
+}
+
+function formatLastIrrigation(irrigationEvents = []) {
+  const lastEvent = irrigationEvents.at(-1);
+  if (!lastEvent) {
+    return "No irrigation recorded yet";
+  }
+
+  const date = new Date(lastEvent.appliedAt).toLocaleDateString();
+  return `Last irrigation: ${lastEvent.amountMm} mm on ${date}`;
+}
+
+function formatPercent(value) {
+  return `${Math.round(value * 100)}%`;
 }
 
 export default function LayerControls({
@@ -29,6 +44,9 @@ export default function LayerControls({
   analysisParcelId,
   analysisParcel,
   analysisError,
+  irrigationRecommendation,
+  irrigationLoading,
+  irrigationError,
   isDrawingParcel,
   draftPointCount,
   onStartParcelDrawing,
@@ -39,6 +57,9 @@ export default function LayerControls({
   onDeleteSelectedParcel,
   onStartAnalysis,
   onStopAnalysis,
+  onPlantTypeChange,
+  onIrrigateSelectedParcel,
+  onRefreshRecommendation,
 }) {
   const activeLayer = LAYERS.find((layer) => layer.id === layerId);
   const showMoistureLegend = activeLayer?.legend === "moisture";
@@ -152,6 +173,25 @@ export default function LayerControls({
             <p className="account-card__label">Selected parcel</p>
             <strong>{selectedParcel.name}</strong>
             <p>{formatHectares(selectedParcel.areaHectares)}</p>
+
+            <label className="parcel-field">
+              <span>Plant type</span>
+              <select
+                value={selectedParcel.plantType}
+                onChange={(event) => onPlantTypeChange(event.target.value)}
+              >
+                {PLANT_TYPES.map((plant) => (
+                  <option key={plant.id} value={plant.id}>
+                    {plant.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <p className="irrigation-note">
+              {formatLastIrrigation(selectedParcel.irrigationEvents)}
+            </p>
+
             <div className="parcel-actions">
               {!analysisActive ? (
                 <button
@@ -170,6 +210,21 @@ export default function LayerControls({
                   Stop analysis
                 </button>
               )}
+              <button
+                type="button"
+                className="action-btn action-btn--water"
+                onClick={onIrrigateSelectedParcel}
+              >
+                Mark irrigation
+              </button>
+              <button
+                type="button"
+                className="action-btn"
+                onClick={onRefreshRecommendation}
+                disabled={irrigationLoading}
+              >
+                Refresh advice
+              </button>
               <button
                 type="button"
                 className="action-btn action-btn--danger"
@@ -210,6 +265,72 @@ export default function LayerControls({
               stays in simple base-map mode.
             </div>
           )
+        )}
+      </section>
+
+      <section className="controls__section">
+        <div className="section-heading">
+          <h2>Irrigation advice</h2>
+          <span className={`status-pill ${
+            irrigationError
+              ? "error"
+              : irrigationRecommendation?.should_irrigate
+                ? "active"
+                : ""
+          }`}>
+            {irrigationError
+              ? "error"
+              : irrigationLoading
+                ? "loading"
+                : irrigationRecommendation?.urgency ?? "idle"}
+          </span>
+        </div>
+
+        {irrigationError && (
+          <div className="error-card">
+            <strong>Recommendation failed</strong>
+            <p>{irrigationError}</p>
+          </div>
+        )}
+
+        {irrigationLoading && !irrigationRecommendation && !irrigationError && (
+          <div className="empty-card">
+            Training on history and fetching current satellite/weather data.
+          </div>
+        )}
+
+        {irrigationRecommendation && !irrigationError && (
+          <div className="recommendation-card">
+            <div className="recommendation-card__main">
+              <strong>
+                {irrigationRecommendation.should_irrigate
+                  ? "Irrigate"
+                  : "Hold irrigation"}
+              </strong>
+              <span>
+                {formatPercent(irrigationRecommendation.necessity_score)} need
+              </span>
+            </div>
+            <dl className="recommendation-metrics">
+              <div>
+                <dt>Amount</dt>
+                <dd>{irrigationRecommendation.recommended_irrigation_mm} mm</dd>
+              </div>
+              <div>
+                <dt>Urgency</dt>
+                <dd>{irrigationRecommendation.urgency}</dd>
+              </div>
+              <div>
+                <dt>Model</dt>
+                <dd>{irrigationRecommendation.model_type}</dd>
+              </div>
+              <div>
+                <dt>Samples</dt>
+                <dd>{irrigationRecommendation.training_samples}</dd>
+              </div>
+            </dl>
+            <p>{irrigationRecommendation.reason}</p>
+          </div>
         )}
       </section>
 
