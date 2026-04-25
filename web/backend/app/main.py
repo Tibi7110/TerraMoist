@@ -11,8 +11,10 @@ import httpx
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.auth_routes import router as auth_router
 from app.api.routes import router as api_router
 from app.core.config import get_settings
+from app.services.auth import AuthService
 from app.services.cdse_auth import CDSETokenManager
 from app.services.sentinel_hub import SentinelHubClient
 
@@ -34,11 +36,17 @@ async def lifespan(app: FastAPI):
     http_client = httpx.AsyncClient()
     token_manager = CDSETokenManager(settings, http_client)
     sh_client = SentinelHubClient(settings, token_manager, http_client)
+    auth_service = AuthService(
+        db_path=settings.auth_db_path,
+        secret_key=settings.auth_secret_key,
+        token_ttl_seconds=settings.auth_token_ttl_seconds,
+    )
 
     app.state.settings = settings
     app.state.http_client = http_client
     app.state.token_manager = token_manager
     app.state.sentinel_hub = sh_client
+    app.state.auth_service = auth_service
 
     logger.info("TerraMoist backend ready")
     try:
@@ -62,11 +70,12 @@ settings = get_settings()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.frontend_origin],
-    allow_methods=["GET", "POST"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
 app.include_router(api_router)
+app.include_router(auth_router)
 
 
 @app.get("/")

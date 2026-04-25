@@ -45,12 +45,18 @@ async def list_regions() -> dict:
     response_class=Response,
 )
 async def get_tile(req: TileRequest, request: Request) -> Response:
-    """Return a PNG tile for the requested index / bbox / time window.
+    """Return a PNG tile for the requested index / bbox / time window."""
+    settings = request.app.state.settings
+    if not settings.cdse_client_id or not settings.cdse_client_secret:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "CDSE credentials not configured. "
+                "Add CDSE_CLIENT_ID and CDSE_CLIENT_SECRET to web/backend/.env "
+                "(see .env.example)."
+            ),
+        )
 
-    This is the core endpoint the frontend consumes. The response is a raw
-    image so it can be used directly as a Leaflet ImageOverlay source or an
-    <img> src via blob URL.
-    """
     sh_client = request.app.state.sentinel_hub
     try:
         png_bytes = await sh_client.fetch_tile_png(
@@ -61,11 +67,11 @@ async def get_tile(req: TileRequest, request: Request) -> Response:
             width=req.width,
             height=req.height,
         )
-    except Exception as exc:  # surfaces CDSE auth / Process API errors
+    except Exception as exc:
         logger.exception("Tile fetch failed")
         raise HTTPException(
             status_code=502,
-            detail=f"Sentinel Hub request failed: {exc}",
+            detail=f"Sentinel Hub error: {exc}",
         ) from exc
 
     return Response(

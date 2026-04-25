@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -20,8 +21,8 @@ class Settings(BaseSettings):
     )
 
     # Required credentials for the Copernicus Data Space Ecosystem OAuth client.
-    cdse_client_id: str
-    cdse_client_secret: str
+    cdse_client_id: str | None = None
+    cdse_client_secret: str | None = None
 
     # CDSE endpoints. Kept in config (with defaults) so they can be overridden
     # per environment without code changes.
@@ -33,6 +34,12 @@ class Settings(BaseSettings):
 
     # Frontend origin used by the CORS middleware (Vite default in dev).
     frontend_origin: str = "http://localhost:5173"
+
+    # Local auth storage and token signing. Good enough for local development;
+    # production should override the secret via environment variables.
+    auth_db_path: Path = Path("data/terramoist.db")
+    auth_secret_key: str = "terramoist-dev-auth-secret-change-me"
+    auth_token_ttl_seconds: int = 60 * 60 * 24 * 7
 
 
 @lru_cache

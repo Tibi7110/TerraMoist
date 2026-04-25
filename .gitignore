@@ -47,4 +47,7 @@
 
 # Misc
 /web/**/*.bak
+/web/**/*.db
+/web/**/*.db-shm
+/web/**/*.db-wal
 /web/**/*.tmp
