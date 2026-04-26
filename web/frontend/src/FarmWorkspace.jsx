@@ -20,16 +20,12 @@ function defaultDate() {
   return d.toISOString().slice(0, 10);
 }
 
-const THEME_STORAGE_KEY = "terramoist.theme";
-
-function loadTheme() {
-  return window.localStorage.getItem(THEME_STORAGE_KEY) === "dark"
-    ? "dark"
-    : "white";
-}
-
-export default function FarmWorkspace({ currentUser, onLogout }) {
-  const [theme, setTheme] = useState(loadTheme);
+export default function FarmWorkspace({
+  theme,
+  onThemeToggle,
+  currentUser,
+  onLogout,
+}) {
   const [layerId, setLayerId] = useState(LAYERS[0].id);
   const [date, setDate] = useState(defaultDate());
   const [bounds, setBounds] = useState(
@@ -60,14 +56,6 @@ export default function FarmWorkspace({ currentUser, onLogout }) {
   function persistParcels(nextParcels) {
     setParcels(nextParcels);
     saveParcelsForUser(currentUser.id, nextParcels);
-  }
-
-  function handleThemeToggle() {
-    setTheme((current) => {
-      const next = current === "dark" ? "white" : "dark";
-      window.localStorage.setItem(THEME_STORAGE_KEY, next);
-      return next;
-    });
   }
 
   useEffect(() => {
@@ -296,7 +284,7 @@ export default function FarmWorkspace({ currentUser, onLogout }) {
     <div className={`app theme-${theme}`}>
       <LayerControls
         theme={theme}
-        onThemeToggle={handleThemeToggle}
+        onThemeToggle={onThemeToggle}
         layerId={layerId}
         onLayerChange={setLayerId}
         date={date}

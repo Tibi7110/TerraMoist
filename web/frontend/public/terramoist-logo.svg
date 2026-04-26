@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="TerraMoist logo">
+  <defs>
+    <linearGradient id="water" x1="150" y1="60" x2="330" y2="330" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#20c2f1"/>
+      <stop offset=".55" stop-color="#0797cf"/>
+      <stop offset="1" stop-color="#056b92"/>
+    </linearGradient>
+    <linearGradient id="leaf" x1="270" y1="210" x2="430" y2="310" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#65bd3c"/>
+      <stop offset="1" stop-color="#28741f"/>
+    </linearGradient>
+    <linearGradient id="soil" x1="120" y1="330" x2="390" y2="450" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2c180c"/>
+      <stop offset=".7" stop-color="#4b2f1a"/>
+      <stop offset="1" stop-color="#241307"/>
+    </linearGradient>
+  </defs>
+
+  <path
+    fill="url(#water)"
+    d="M252 31c24 73 136 171 150 260 9 56-40 94-109 95-80 1-150-42-150-119 0-76 81-154 109-236Z"
+  />
+  <path
+    fill="#fff"
+    d="M189 259c9-43 31-76 61-113-23 50-38 87-39 128-1 30 10 59 28 85-41-14-61-50-50-100Z"
+    opacity=".9"
+  />
+
+  <path
+    fill="url(#leaf)"
+    stroke="#fff"
+    stroke-linejoin="round"
+    stroke-width="16"
+    d="M254 314c9-77 62-126 152-127-9 66-66 125-140 120 46-50 83-76 83-76-50 23-83 52-95 83Z"
+  />
+  <path
+    fill="url(#leaf)"
+    stroke="#fff"
+    stroke-linejoin="round"
+    stroke-width="14"
+    d="M250 323c-20-62-66-92-126-85 10 58 58 96 115 88-36-37-68-55-68-55 36 14 63 30 79 52Z"
+  />
+  <path
+    fill="#2f992e"
+    stroke="#fff"
+    stroke-linecap="round"
+    stroke-width="8"
+    d="M252 309v85"
+  />
+
+  <path
+    fill="url(#soil)"
+    d="M82 328c37 88 105 139 174 139 75 0 145-50 174-139-33 35-80 51-135 49-18 14-29 22-41 22-12 0-24-7-42-22-52 1-96-15-130-49Z"
+  />
+  <path
+    fill="none"
+    stroke="#704925"
+    stroke-linecap="round"
+    stroke-width="10"
+    d="M112 378c26-18 39 6 66-10M302 377c30-17 47 4 75-12"
+    opacity=".75"
+  />
+  <g fill="#704925" opacity=".72">
+    <circle cx="111" cy="354" r="6"/>
+    <circle cx="151" cy="420" r="5"/>
+    <circle cx="369" cy="354" r="6"/>
+    <circle cx="333" cy="426" r="5"/>
+  </g>
+
+  <path
+    fill="none"
+    stroke="#fff"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-width="10"
+    d="M255 389c-20 24-54 31-91 31m91-31c-17 39-45 57-77 69m78-69c-1 39-10 64-29 88m29-88c13 35 26 57 42 77m-42-77c29 27 57 42 92 48"
+  />
+  <path
+    fill="none"
+    stroke="#fff"
+    stroke-linecap="round"
+    stroke-width="13"
+    d="M222 128c27-25 75-25 103 0m-80 32c17-15 45-15 62 0m-43 31c8-7 21-7 29 0"
+  />
+  <circle cx="277" cy="223" r="14" fill="#fff"/>
+</svg>

@@ -89,7 +89,16 @@ export default function LayerControls({
     <aside className="controls">
       <header className="controls__header">
         <div className="brand-row">
-          <h1>TerraMoist</h1>
+          <div className="brand-lockup">
+            <span className="tm-logo tm-logo--small" aria-hidden="true">
+              <span className="leaf-left" />
+              <span className="leaf-right" />
+              <span className="stem" />
+              <span className="wifi" />
+              <span className="roots" />
+            </span>
+            <h1>TerraMoist</h1>
+          </div>
           <button
             type="button"
             className="theme-toggle"

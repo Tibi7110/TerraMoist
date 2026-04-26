@@ -11,7 +11,16 @@ import {
 } from "./auth";
 import "./App.css";
 
+const THEME_STORAGE_KEY = "terramoist.theme";
+
+function loadTheme() {
+  return window.localStorage.getItem(THEME_STORAGE_KEY) === "dark"
+    ? "dark"
+    : "white";
+}
+
 export default function App() {
+  const [theme, setTheme] = useState(loadTheme);
   const [authState, setAuthState] = useState(() => {
     const token = loadStoredToken();
     return token
@@ -87,9 +96,19 @@ export default function App() {
     setAuthState({ status: "anonymous", token: "", user: null });
   }
 
+  function handleThemeToggle() {
+    setTheme((current) => {
+      const next = current === "dark" ? "white" : "dark";
+      window.localStorage.setItem(THEME_STORAGE_KEY, next);
+      return next;
+    });
+  }
+
   if (authState.status !== "authenticated") {
     return (
       <AuthScreen
+        theme={theme}
+        onThemeToggle={handleThemeToggle}
         pending={authPending || authState.status === "loading"}
         error={authError}
         onAuthenticate={handleAuthenticate}
@@ -99,6 +118,8 @@ export default function App() {
 
   return (
     <FarmWorkspace
+      theme={theme}
+      onThemeToggle={handleThemeToggle}
       currentUser={authState.user}
       onLogout={handleLogout}
     />

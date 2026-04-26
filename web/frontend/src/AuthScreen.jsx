@@ -6,7 +6,13 @@ const INITIAL_FORM = {
   password: "",
 };
 
-export default function AuthScreen({ pending, error, onAuthenticate }) {
+export default function AuthScreen({
+  theme,
+  onThemeToggle,
+  pending,
+  error,
+  onAuthenticate,
+}) {
   const [mode, setMode] = useState("register");
   const [form, setForm] = useState(INITIAL_FORM);
 
@@ -31,8 +37,24 @@ export default function AuthScreen({ pending, error, onAuthenticate }) {
   const isRegister = mode === "register";
 
   return (
-    <div className="auth-shell">
+    <div className={`auth-shell theme-${theme}`}>
+      <button
+        type="button"
+        className="theme-toggle auth-theme-toggle"
+        onClick={onThemeToggle}
+        aria-label={`Switch to ${theme === "dark" ? "white" : "dark"} theme`}
+      >
+        <span className={theme === "white" ? "active" : ""}>White</span>
+        <span className={theme === "dark" ? "active" : ""}>Dark</span>
+      </button>
       <section className="auth-hero">
+        <span className="tm-logo tm-logo--hero" aria-hidden="true">
+          <span className="leaf-left" />
+          <span className="leaf-right" />
+          <span className="stem" />
+          <span className="wifi" />
+          <span className="roots" />
+        </span>
         <div className="auth-hero__badge">TerraMoist Platform</div>
         <h1>Build your farm workspace.</h1>
 
