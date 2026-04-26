@@ -6,15 +6,16 @@ from uuid import uuid4
 
 from .schemas import IrrigationCommandPayload, IrrigationStartRequest, IrrigationStartResult
 
-# LPM per unit. Fixed: drip/sprinkler zone (sequential). Mobile: pivot unit (parallel).
+# LPM per unit — both systems run units in parallel.
+# Fixed drip: 5,000 LPM/10ha zone → ~3 mm/h application rate.
+# Mobile pivot: 10,000 LPM/50ha pivot → ~1.2 mm/h application rate.
 _FLOW_LPM_BY_SYSTEM = {
-    "fixed": 3000,
+    "fixed": 5000,
     "mobile": 10000,
 }
 
-# Hectares covered per zone/pivot unit.
 _HA_PER_UNIT = {
-    "fixed": 2,
+    "fixed": 10,
     "mobile": 50,
 }
 
@@ -41,12 +42,8 @@ def build_start_result(request: IrrigationStartRequest) -> IrrigationStartResult
     ha_per_unit = _HA_PER_UNIT[request.irrigation_system_type]
     zone_count = max(1, ceil(request.area_hectares / ha_per_unit))
 
-    if request.irrigation_system_type == "mobile":
-        # Pivots run in parallel — effective flow scales with unit count.
-        effective_flow = flow_lpm * zone_count
-    else:
-        # Fixed zones irrigate sequentially — flow rate stays constant.
-        effective_flow = flow_lpm
+    # Both systems run units in parallel — effective flow scales with unit count.
+    effective_flow = flow_lpm * zone_count
 
     duration_minutes = max(1, ceil(water_volume_liters / effective_flow))
 

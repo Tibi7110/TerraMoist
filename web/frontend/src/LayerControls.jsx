@@ -417,11 +417,11 @@ export default function LayerControls({
             <dl className="recommendation-metrics">
               <div>
                 <dt>Water volume</dt>
-                <dd>{simulationRun.result.water_volume_liters.toLocaleString()} L</dd>
+                <dd>{(simulationRun.result.water_volume_liters / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })} m³</dd>
               </div>
               <div>
                 <dt>Duration</dt>
-                <dd>~{simulationRun.result.estimated_duration_minutes} min</dd>
+                <dd>~{(simulationRun.result.estimated_duration_minutes / 60).toLocaleString(undefined, { maximumFractionDigits: 1 })} h</dd>
               </div>
               <div>
                 <dt>Zones</dt>
@@ -433,7 +433,7 @@ export default function LayerControls({
               </div>
               <div>
                 <dt>Water saved</dt>
-                <dd>{simulationRun.result.estimated_water_saved_liters.toLocaleString()} L</dd>
+                <dd>{(simulationRun.result.estimated_water_saved_liters / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })} m³</dd>
               </div>
               <div>
                 <dt>Target</dt>
