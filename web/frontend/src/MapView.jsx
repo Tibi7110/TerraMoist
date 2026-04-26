@@ -14,6 +14,7 @@ import "leaflet/dist/leaflet.css";
 import { LAYERS } from "./config";
 import { fetchParcelAnalysisImage } from "./analysisApi";
 import { getParcelBounds } from "./parcels";
+import { PARCEL_STYLES } from "./mapStyles";
 
 function FlyToBounds({ bounds }) {
   const map = useMap();
@@ -214,6 +215,8 @@ export default function MapView({
   onSelectParcel,
   onAnalysisError,
 }) {
+  const activeLayer = LAYERS.find((layer) => layer.id === layerId);
+
   return (
     <MapContainer
       center={[45, 25]}
@@ -246,20 +249,13 @@ export default function MapView({
           <Polygon
             key={parcel.id}
             positions={parcel.points}
-            pathOptions={{
-              color: isAnalysisParcel
-                ? "#f7c948"
+            pathOptions={
+              isAnalysisParcel
+                ? PARCEL_STYLES.analysis
                 : isSelected
-                  ? "#8df0a7"
-                  : "#58a6ff",
-              weight: isAnalysisParcel ? 4 : isSelected ? 4 : 3,
-              fillColor: isAnalysisParcel
-                ? "#f7c948"
-                : isSelected
-                  ? "#2ea043"
-                  : "#58a6ff",
-              fillOpacity: isAnalysisParcel ? 0.08 : isSelected ? 0.12 : 0.06,
-            }}
+                ? PARCEL_STYLES.selected
+                : PARCEL_STYLES.default
+            }
             eventHandlers={{
               click: () => onSelectParcel(parcel.id),
             }}
@@ -274,25 +270,12 @@ export default function MapView({
       {isDrawingParcel && draftParcelPoints.length >= 2 && (
         <Polyline
           positions={draftParcelPoints}
-          pathOptions={{
-            color: "#f7c948",
-            weight: 3,
-            dashArray: "8 8",
-          }}
+          pathOptions={PARCEL_STYLES.drawing}
         />
       )}
 
       {isDrawingParcel && draftParcelPoints.length >= 3 && (
-        <Polygon
-          positions={draftParcelPoints}
-          pathOptions={{
-            color: "#f7c948",
-            weight: 3,
-            fillColor: "#f7c948",
-            fillOpacity: 0.18,
-            dashArray: "8 8",
-          }}
-        />
+        <Polygon positions={draftParcelPoints} pathOptions={PARCEL_STYLES.drawing} />
       )}
 
       {isDrawingParcel &&
@@ -319,6 +302,7 @@ export default function MapView({
         onAddParcelPoint={onAddParcelPoint}
       />
       <FlyToBounds bounds={bounds} />
+
     </MapContainer>
   );
 }

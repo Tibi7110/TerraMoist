@@ -3,6 +3,7 @@ import MapView from "./MapView";
 import LayerControls from "./LayerControls";
 import { LAYERS, PRESETS } from "./config";
 import { fetchIrrigationRecommendation } from "./analysisApi";
+import { startSimulation, stopSimulation, completeSimulation } from "./simulationApi";
 import {
   addIrrigationEvent,
   createParcel,
@@ -38,6 +39,9 @@ export default function FarmWorkspace({ currentUser, onLogout }) {
   const [recommendationRefreshKey, setRecommendationRefreshKey] = useState(0);
   const [isDrawingParcel, setIsDrawingParcel] = useState(false);
   const [draftParcelPoints, setDraftParcelPoints] = useState([]);
+  const [simulationRun, setSimulationRun] = useState(null);
+  const [simulationLoading, setSimulationLoading] = useState(false);
+  const [simulationError, setSimulationError] = useState(null);
 
   const selectedParcel =
     parcels.find((parcel) => parcel.id === selectedParcelId) ?? null;
@@ -175,6 +179,17 @@ export default function FarmWorkspace({ currentUser, onLogout }) {
     persistParcels(updateParcelPlantType(parcels, selectedParcel.id, plantType));
   }
 
+  function handleIrrigationTypeChange(irrigationType) {
+    if (!selectedParcel) {
+      return;
+    }
+
+    const nextParcels = parcels.map((p) =>
+      p.id === selectedParcel.id ? { ...p, irrigationType } : p,
+    );
+    persistParcels(nextParcels);
+  }
+
   function handleIrrigateSelectedParcel() {
     if (!selectedParcel) {
       return;
@@ -185,6 +200,71 @@ export default function FarmWorkspace({ currentUser, onLogout }) {
 
   function handleRefreshRecommendation() {
     setRecommendationRefreshKey((current) => current + 1);
+  }
+
+  async function handleStartSimulation() {
+    if (!selectedParcel || !irrigationRecommendation) return;
+    const recommendedMm = irrigationRecommendation.recommended_irrigation_mm;
+    if (!recommendedMm || recommendedMm <= 0) {
+      setSimulationError("No irrigation needed right now (recommended amount is 0 mm).");
+      return;
+    }
+    const areaHectares = getParcelAreaHectares(selectedParcel.points);
+    if (areaHectares <= 0) {
+      setSimulationError("Cannot compute parcel area. Try redrawing the parcel.");
+      return;
+    }
+    setSimulationLoading(true);
+    setSimulationError(null);
+    try {
+      const run = await startSimulation({
+        parcel: {
+          ...selectedParcel,
+          areaHectares,
+        },
+        recommendedMm,
+        userId: currentUser.id,
+      });
+      setSimulationRun(run);
+    } catch (error) {
+      setSimulationError(error.message);
+    } finally {
+      setSimulationLoading(false);
+    }
+  }
+
+  async function handleStopSimulation() {
+    if (!simulationRun) return;
+    setSimulationLoading(true);
+    try {
+      const run = await stopSimulation(simulationRun.run_id);
+      setSimulationRun(run);
+    } catch (error) {
+      setSimulationError(error.message);
+    } finally {
+      setSimulationLoading(false);
+    }
+  }
+
+  async function handleCompleteSimulation() {
+    if (!simulationRun || !selectedParcelId) return;
+    setSimulationLoading(true);
+    try {
+      const run = await completeSimulation(simulationRun.run_id);
+      setSimulationRun(run);
+      const appliedMm = run.result.command_payload.target_mm;
+      persistParcels(addIrrigationEvent(parcels, selectedParcelId, appliedMm));
+      setRecommendationRefreshKey((k) => k + 1);
+    } catch (error) {
+      setSimulationError(error.message);
+    } finally {
+      setSimulationLoading(false);
+    }
+  }
+
+  function handleDismissSimulation() {
+    setSimulationRun(null);
+    setSimulationError(null);
   }
 
   return (
@@ -230,8 +310,16 @@ export default function FarmWorkspace({ currentUser, onLogout }) {
         onStartAnalysis={handleStartAnalysis}
         onStopAnalysis={handleStopAnalysis}
         onPlantTypeChange={handlePlantTypeChange}
+        onIrrigationTypeChange={handleIrrigationTypeChange}
         onIrrigateSelectedParcel={handleIrrigateSelectedParcel}
         onRefreshRecommendation={handleRefreshRecommendation}
+        simulationRun={simulationRun}
+        simulationLoading={simulationLoading}
+        simulationError={simulationError}
+        onStartSimulation={handleStartSimulation}
+        onStopSimulation={handleStopSimulation}
+        onCompleteSimulation={handleCompleteSimulation}
+        onDismissSimulation={handleDismissSimulation}
       />
       <main className="map-area">
         <MapView
@@ -250,4 +338,5 @@ export default function FarmWorkspace({ currentUser, onLogout }) {
       </main>
     </div>
   );
+  
 }

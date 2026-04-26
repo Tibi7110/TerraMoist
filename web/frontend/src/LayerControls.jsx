@@ -2,6 +2,7 @@ import {
   LAYERS,
   PRESETS,
   PLANT_TYPES,
+  IRRIGATION_TYPES,
   MOISTURE_LEGEND,
   VEGETATION_LEGEND,
 } from "./config";
@@ -58,8 +59,16 @@ export default function LayerControls({
   onStartAnalysis,
   onStopAnalysis,
   onPlantTypeChange,
+  onIrrigationTypeChange,
   onIrrigateSelectedParcel,
   onRefreshRecommendation,
+  simulationRun,
+  simulationLoading,
+  simulationError,
+  onStartSimulation,
+  onStopSimulation,
+  onCompleteSimulation,
+  onDismissSimulation,
 }) {
   const activeLayer = LAYERS.find((layer) => layer.id === layerId);
   const showMoistureLegend = activeLayer?.legend === "moisture";
@@ -188,6 +197,22 @@ export default function LayerControls({
               </select>
             </label>
 
+            <label className="parcel-field">
+              <span>Irrigation Type</span>
+              <select
+                value={selectedParcel.irrigationType || "fixed"}
+                onChange={(event) =>
+                  onIrrigationTypeChange(event.target.value)
+                }
+              >
+                {IRRIGATION_TYPES.map((type) => (
+                  <option key={type.id} value={type.id}>
+                    {type.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
             <p className="irrigation-note">
               {formatLastIrrigation(selectedParcel.irrigationEvents)}
             </p>
@@ -214,8 +239,9 @@ export default function LayerControls({
                 type="button"
                 className="action-btn action-btn--water"
                 onClick={onIrrigateSelectedParcel}
+                disabled={irrigationLoading}
               >
-                Mark irrigation
+                Start irrigation
               </button>
               <button
                 type="button"
@@ -334,6 +360,125 @@ export default function LayerControls({
         )}
       </section>
 
+      <section className="controls__section">
+        <div className="section-heading">
+          <h2>ESP32 Control</h2>
+          <span className={`status-pill ${
+            simulationError ? "error" :
+            simulationRun?.state === "running" ? "active" :
+            simulationRun?.state === "completed" ? "completed" : ""
+          }`}>
+            {simulationError ? "error" :
+             simulationRun?.state ?? "idle"}
+          </span>
+        </div>
+
+        {simulationError && (
+          <div className="error-card">
+            <strong>Simulation error</strong>
+            <p>{simulationError}</p>
+            <button type="button" className="action-btn" onClick={onDismissSimulation}>
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        {!simulationRun && !simulationError && (
+          irrigationRecommendation ? (
+            <div>
+              <p className="hint">
+                Send the irrigation command to the ESP32 device based on the current recommendation.
+              </p>
+              <button
+                type="button"
+                className="action-btn action-btn--primary"
+                onClick={onStartSimulation}
+                disabled={simulationLoading}
+              >
+                {simulationLoading ? "Starting…" : "Start ESP32 irrigation"}
+              </button>
+            </div>
+          ) : (
+            <div className="empty-card">
+              Run irrigation advice first, then start the ESP32 simulation.
+            </div>
+          )
+        )}
+
+        {simulationRun && !simulationError && (
+          <div className="simulation-card">
+            <div className="simulation-card__header">
+              <strong>{simulationRun.result.command_payload.parcel_name}</strong>
+              <span className={`run-state run-state--${simulationRun.state}`}>
+                {simulationRun.state}
+              </span>
+            </div>
+
+            <dl className="recommendation-metrics">
+              <div>
+                <dt>Water volume</dt>
+                <dd>{simulationRun.result.water_volume_liters.toLocaleString()} L</dd>
+              </div>
+              <div>
+                <dt>Duration</dt>
+                <dd>~{simulationRun.result.estimated_duration_minutes} min</dd>
+              </div>
+              <div>
+                <dt>Zones</dt>
+                <dd>{simulationRun.result.command_payload.zone_count}</dd>
+              </div>
+              <div>
+                <dt>System</dt>
+                <dd>{simulationRun.result.command_payload.irrigation_system_type}</dd>
+              </div>
+              <div>
+                <dt>Water saved</dt>
+                <dd>{simulationRun.result.estimated_water_saved_liters.toLocaleString()} L</dd>
+              </div>
+              <div>
+                <dt>Target</dt>
+                <dd>{simulationRun.result.command_payload.target_mm} mm</dd>
+              </div>
+            </dl>
+
+            <p className="hint simulation-topic">
+              MQTT: <code>{simulationRun.result.topic}</code>
+            </p>
+
+            {simulationRun.state === "running" && (
+              <div className="parcel-actions">
+                <button
+                  type="button"
+                  className="action-btn action-btn--primary"
+                  onClick={onCompleteSimulation}
+                  disabled={simulationLoading}
+                >
+                  Mark complete
+                </button>
+                <button
+                  type="button"
+                  className="action-btn action-btn--danger"
+                  onClick={onStopSimulation}
+                  disabled={simulationLoading}
+                >
+                  Stop irrigation
+                </button>
+              </div>
+            )}
+
+            {simulationRun.state !== "running" && (
+              <button
+                type="button"
+                className="action-btn"
+                onClick={onDismissSimulation}
+              >
+                New simulation
+              </button>
+            )}
+          </div>
+        )}
+      </section>
+
       <section className={`controls__section ${!analysisReady ? "section-disabled" : ""}`}>
         <h2>Index</h2>
         <div className="layer-list">
@@ -370,20 +515,7 @@ export default function LayerControls({
         </p>
       </section>
 
-      <section className="controls__section">
-        <h2>Quick zoom</h2>
-        <div className="preset-grid">
-          {PRESETS.map((preset) => (
-            <button
-              key={preset.id}
-              className="preset-btn"
-              onClick={() => onPresetSelect(preset.bounds)}
-            >
-              {preset.name}
-            </button>
-          ))}
-        </div>
-      </section>
+      
 
       {showMoistureLegend && analysisActive && (
         <section className="controls__section">

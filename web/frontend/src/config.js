@@ -42,12 +42,16 @@ export const PRESETS = [
 ];
 
 export const PLANT_TYPES = [
-  { id: "wheat", label: "Wheat", cropCoefficient: 1.15 },
-  { id: "corn", label: "Corn", cropCoefficient: 1.2 },
-  { id: "sunflower", label: "Sunflower", cropCoefficient: 1.0 },
-  { id: "soybean", label: "Soybean", cropCoefficient: 1.05 },
-  { id: "vegetables", label: "Vegetables", cropCoefficient: 1.1 },
-  { id: "other", label: "Other crop", cropCoefficient: 1.0 },
+  { id: "none", label: "Not specified" },
+  { id: "corn", label: "Corn" },
+  { id: "wheat", label: "Wheat" },
+  { id: "sunflower", label: "Sunflower" },
+  { id: "rapeseed", label: "Rapeseed" },
+];
+
+export const IRRIGATION_TYPES = [
+  { id: "fixed", label: "Fixed" },
+  { id: "moving", label: "Moving" },
 ];
 
 export const MOISTURE_LEGEND = [
