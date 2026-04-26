@@ -73,11 +73,12 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS - allow the React dev server to call us during development.
+# CORS - allow any local network origin during development.
 settings = get_settings()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.frontend_origin],
+    allow_origin_regex=r"http://\d+\.\d+\.\d+\.\d+:\d+",
     allow_methods=["*"],
     allow_headers=["*"],
 )

@@ -517,39 +517,6 @@ export default function LayerControls({
 
       
 
-      {showMoistureLegend && analysisActive && (
-        <section className="controls__section">
-          <h2>Legend</h2>
-          <div className="legend">
-            {MOISTURE_LEGEND.map((stop) => (
-              <div key={stop.label} className="legend-row">
-                <span
-                  className="legend-swatch"
-                  style={{ background: stop.color }}
-                />
-                <span>{stop.label}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {showVegetationLegend && analysisActive && (
-        <section className="controls__section">
-          <h2>Legend</h2>
-          <div className="legend">
-            {VEGETATION_LEGEND.map((stop) => (
-              <div key={stop.label} className="legend-row">
-                <span
-                  className="legend-swatch"
-                  style={{ background: stop.color }}
-                />
-                <span>{stop.label}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
 
       <footer className="controls__footer">
         <small>

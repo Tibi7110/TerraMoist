@@ -1,5 +1,7 @@
 function getApiBase() {
-  const base = import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000/api/v1";
+  const base =
+    import.meta.env.VITE_API_BASE ??
+    `http://${window.location.hostname}:8000/api/v1`;
   return base.replace(/\/+$/, "");
 }
 

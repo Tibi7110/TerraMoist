@@ -11,7 +11,7 @@ import {
   useMapEvents,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { LAYERS } from "./config";
+import { LAYERS, MOISTURE_LEGEND, VEGETATION_LEGEND } from "./config";
 import { fetchParcelAnalysisImage } from "./analysisApi";
 import { getParcelBounds } from "./parcels";
 import { PARCEL_STYLES } from "./mapStyles";
@@ -202,6 +202,28 @@ function ParcelAnalysisOverlay({ parcel, layerId, date, onAnalysisError }) {
   );
 }
 
+function LayerLegendOverlay({ layerId, visible }) {
+  const activeLayer = LAYERS.find((l) => l.id === layerId);
+  if (!visible || !activeLayer?.legend) return null;
+
+  const items =
+    activeLayer.legend === "moisture" ? MOISTURE_LEGEND : VEGETATION_LEGEND;
+  const title =
+    activeLayer.legend === "moisture" ? "Soil Moisture" : "Vegetation";
+
+  return (
+    <div className="map-legend-overlay">
+      <p className="map-legend-title">{title}</p>
+      {items.map((stop) => (
+        <div key={stop.label} className="map-legend-item">
+          <span className="map-legend-swatch" style={{ background: stop.color }} />
+          <span>{stop.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function MapView({
   layerId,
   date,
@@ -218,6 +240,8 @@ export default function MapView({
   const activeLayer = LAYERS.find((layer) => layer.id === layerId);
 
   return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+    <LayerLegendOverlay layerId={layerId} visible={Boolean(analysisParcel)} />
     <MapContainer
       center={[45, 25]}
       zoom={6}
@@ -302,7 +326,7 @@ export default function MapView({
         onAddParcelPoint={onAddParcelPoint}
       />
       <FlyToBounds bounds={bounds} />
-
     </MapContainer>
+    </div>
   );
 }
