@@ -6,7 +6,14 @@ import logging
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request, Response
-from pywebpush import webpush, WebPushException
+
+try:
+    from pywebpush import WebPushException, webpush
+except ImportError:  # pragma: no cover - depends on optional local setup
+    webpush = None
+
+    class WebPushException(Exception):
+        """Fallback so the API can start without optional push dependencies."""
 
 from app.schemas.tiles import HealthResponse, PushSubscription, PushSendRequest, TileRequest
 from app.services.regions import PRESETS
@@ -114,6 +121,15 @@ async def push_subscribe(sub: PushSubscription) -> dict:
 @router.post("/push/send")
 async def push_send(req: PushSendRequest) -> dict:
     """Send a push notification to all subscribers (called by notify.py)."""
+    if webpush is None:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Push notifications are not available because pywebpush is not "
+                "installed. Install web/backend/requirements.txt to enable them."
+            ),
+        )
+
     payload = json.dumps({"title": req.title, "body": req.body, "url": req.url})
     sent, failed = 0, 0
     dead: list[dict] = []

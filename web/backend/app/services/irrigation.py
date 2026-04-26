@@ -14,12 +14,20 @@ from app.services.weather import WeatherForecast
 
 
 PLANT_COEFFICIENTS = {
+    "none": 1.0,
     "wheat": 1.15,
     "corn": 1.2,
     "sunflower": 1.0,
+    "rapeseed": 1.05,
     "soybean": 1.05,
     "vegetables": 1.1,
     "other": 1.0,
+}
+
+
+IRRIGATION_TYPE_EFFICIENCY = {
+    "fixed": 0.9,
+    "moving": 0.75,
 }
 
 
@@ -183,17 +191,27 @@ class IrrigationEngine:
         ndmi_png: bytes,
         weather: WeatherForecast,
         irrigation_events: list[dict],
+        irrigation_type: str = "fixed",
     ) -> dict:
         plant_type = plant_type if plant_type in PLANT_COEFFICIENTS else "other"
+        irrigation_type = (
+            irrigation_type
+            if irrigation_type in IRRIGATION_TYPE_EFFICIENCY
+            else "fixed"
+        )
         kc = PLANT_COEFFICIENTS[plant_type]
+        delivery_efficiency = IRRIGATION_TYPE_EFFICIENCY[irrigation_type]
         moisture = self.extract_moisture_features(ndmi_png)
         water_balance = self.calculate_water_balance(
             weather=weather,
             initial_deficit_mm=moisture.initial_water_deficit_mm,
             crop_coefficient=kc,
-            irrigation_by_day_mm=_irrigation_by_forecast_day(
-                weather.daily_dates,
-                irrigation_events,
+            irrigation_by_day_mm=tuple(
+                applied_mm * delivery_efficiency
+                for applied_mm in _irrigation_by_forecast_day(
+                    weather.daily_dates,
+                    irrigation_events,
+                )
             ),
         )
         features = self._build_features(
@@ -206,6 +224,11 @@ class IrrigationEngine:
         samples = self._store.load_samples()
         ml_prediction = self._predict_with_knn(features, samples)
         prediction = ml_prediction or baseline
+        scenarios = self._build_irrigation_scenarios(
+            moisture=moisture,
+            water_balance=water_balance,
+            irrigation_type=irrigation_type,
+        )
 
         self._store.add_sample(
             {
@@ -225,10 +248,12 @@ class IrrigationEngine:
             "reason": self._reason(prediction, water_balance, ml_prediction is None),
             "bbox": bbox,
             "plant_type": plant_type,
+            "irrigation_type": irrigation_type,
             "training_samples": len(samples),
             "moisture": moisture.to_response(),
             "weather": weather.to_response(),
             "water_balance": water_balance.to_response(),
+            "scenarios": scenarios,
         }
 
     def extract_moisture_features(self, png_bytes: bytes) -> MoistureFeatures:
@@ -344,6 +369,61 @@ class IrrigationEngine:
             "fallback_used": True,
         }
 
+    def _build_irrigation_scenarios(
+        self,
+        *,
+        moisture: MoistureFeatures,
+        water_balance: WaterBalance,
+        irrigation_type: str,
+    ) -> list[dict]:
+        delivery_efficiency = IRRIGATION_TYPE_EFFICIENCY[irrigation_type]
+        ideal_effective_mm = water_balance.final_deficit_mm
+        ideal_gross_mm = _gross_water_mm(ideal_effective_mm, delivery_efficiency)
+
+        # Dry-area severity raises the conservation scenarios when more of the
+        # parcel is dry, while wetter fields can safely save more water.
+        dry_area_weight = _clamp(
+            (moisture.dry_pixel_ratio * 0.65)
+            + ((1.0 - moisture.moisture_score) * 0.35)
+        )
+        optimal_effective_ratio = _clamp(
+            0.74 + (dry_area_weight * 0.16),
+            lower=0.74,
+            upper=0.9,
+        )
+        enough_effective_ratio = _clamp(
+            0.48 + (dry_area_weight * 0.18),
+            lower=0.48,
+            upper=0.66,
+        )
+
+        return [
+            _scenario_response(
+                category="ideal",
+                label="Ideal",
+                effective_water_mm=ideal_effective_mm,
+                ideal_effective_mm=ideal_effective_mm,
+                ideal_gross_mm=ideal_gross_mm,
+                delivery_efficiency=delivery_efficiency,
+            ),
+            _scenario_response(
+                category="optimal",
+                label="Optimal",
+                effective_water_mm=ideal_effective_mm * optimal_effective_ratio,
+                ideal_effective_mm=ideal_effective_mm,
+                ideal_gross_mm=ideal_gross_mm,
+                delivery_efficiency=delivery_efficiency,
+            ),
+            _scenario_response(
+                category="enough",
+                label="Enough",
+                effective_water_mm=ideal_effective_mm * enough_effective_ratio,
+                ideal_effective_mm=ideal_effective_mm,
+                ideal_gross_mm=ideal_gross_mm,
+                delivery_efficiency=delivery_efficiency,
+            ),
+        ]
+
     def _predict_with_knn(self, features: dict[str, float], samples: list[dict]) -> dict | None:
         if len(samples) < self.min_ml_samples:
             return None
@@ -436,6 +516,47 @@ def _feature_distance(left: dict[str, float], right: dict[str, float]) -> float:
     for key, scale in scales.items():
         total += ((left[key] - right[key]) / scale) ** 2
     return math.sqrt(total)
+
+
+def _gross_water_mm(effective_water_mm: float, delivery_efficiency: float) -> float:
+    if effective_water_mm <= 0:
+        return 0.0
+    return effective_water_mm / delivery_efficiency
+
+
+def _scenario_response(
+    *,
+    category: str,
+    label: str,
+    effective_water_mm: float,
+    ideal_effective_mm: float,
+    ideal_gross_mm: float,
+    delivery_efficiency: float,
+) -> dict:
+    gross_water_mm = _gross_water_mm(effective_water_mm, delivery_efficiency)
+    if ideal_gross_mm <= 0:
+        water_saved_mm = 0.0
+        water_saved_percent = 0.0
+        projected_yield_percent = 100.0
+    else:
+        water_saved_mm = max(0.0, ideal_gross_mm - gross_water_mm)
+        water_saved_percent = _clamp(water_saved_mm / ideal_gross_mm) * 100
+        effective_water_ratio = _clamp(effective_water_mm / ideal_effective_mm)
+        projected_yield_percent = (
+            100.0
+            if category == "ideal"
+            else _clamp(0.72 + (effective_water_ratio * 0.28)) * 100
+        )
+
+    return {
+        "category": category,
+        "label": label,
+        "water_mm": round(gross_water_mm, 2),
+        "effective_water_mm": round(effective_water_mm, 2),
+        "water_saved_mm": round(water_saved_mm, 2),
+        "water_saved_percent": round(water_saved_percent, 1),
+        "projected_yield_percent": round(projected_yield_percent, 1),
+    }
 
 
 def _decode_png_rgba(data: bytes) -> tuple[int, int, list[tuple[int, int, int, int]]]:

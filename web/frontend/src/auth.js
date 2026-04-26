@@ -1,7 +1,7 @@
 const AUTH_STORAGE_KEY = "terramoist.auth.token";
 
 function getApiBase() {
-  const base = import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000/api/v1";
+  const base = import.meta.env.VITE_API_BASE ?? "/api/v1";
   return base.replace(/\/+$/, "");
 }
 

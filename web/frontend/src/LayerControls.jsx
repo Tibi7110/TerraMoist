@@ -31,7 +31,13 @@ function formatPercent(value) {
   return `${Math.round(value * 100)}%`;
 }
 
+function formatScenarioPercent(value) {
+  return `${Math.round(value)}%`;
+}
+
 export default function LayerControls({
+  theme,
+  onThemeToggle,
   layerId,
   onLayerChange,
   date,
@@ -75,11 +81,25 @@ export default function LayerControls({
   const showVegetationLegend = activeLayer?.legend === "vegetation";
   const analysisReady = Boolean(selectedParcel) && !isDrawingParcel;
   const analysisActive = Boolean(analysisParcelId);
+  const urgencyClass = irrigationRecommendation?.urgency
+    ? `urgency-${irrigationRecommendation.urgency}`
+    : "";
 
   return (
     <aside className="controls">
       <header className="controls__header">
-        <h1>TerraMoist</h1>
+        <div className="brand-row">
+          <h1>TerraMoist</h1>
+          <button
+            type="button"
+            className="theme-toggle"
+            onClick={onThemeToggle}
+            aria-label={`Switch to ${theme === "dark" ? "white" : "dark"} theme`}
+          >
+            <span className={theme === "white" ? "active" : ""}>White</span>
+            <span className={theme === "dark" ? "active" : ""}>Dark</span>
+          </button>
+        </div>
         <p className="tagline">Precision water for sustainable farming</p>
         <p className="powered">
           Powered by <strong>Copernicus Data Space Ecosystem</strong>
@@ -297,19 +317,6 @@ export default function LayerControls({
       <section className="controls__section">
         <div className="section-heading">
           <h2>Irrigation advice</h2>
-          <span className={`status-pill ${
-            irrigationError
-              ? "error"
-              : irrigationRecommendation?.should_irrigate
-                ? "active"
-                : ""
-          }`}>
-            {irrigationError
-              ? "error"
-              : irrigationLoading
-                ? "loading"
-                : irrigationRecommendation?.urgency ?? "idle"}
-          </span>
         </div>
 
         {irrigationError && (
@@ -344,18 +351,40 @@ export default function LayerControls({
               </div>
               <div>
                 <dt>Urgency</dt>
-                <dd>{irrigationRecommendation.urgency}</dd>
-              </div>
-              <div>
-                <dt>Model</dt>
-                <dd>{irrigationRecommendation.model_type}</dd>
-              </div>
-              <div>
-                <dt>Samples</dt>
-                <dd>{irrigationRecommendation.training_samples}</dd>
+                <dd className={`urgency-value ${urgencyClass}`}>
+                  {irrigationRecommendation.urgency}
+                </dd>
               </div>
             </dl>
-            <p>{irrigationRecommendation.reason}</p>
+            {irrigationRecommendation.scenarios?.length > 0 && (
+              <div className="scenario-list">
+                {irrigationRecommendation.scenarios.map((scenario) => (
+                  <div className="scenario-card" key={scenario.category}>
+                    <div className="scenario-card__header">
+                      <strong>{scenario.label}</strong>
+                      <span>{scenario.water_mm} mm</span>
+                    </div>
+                    <dl className="scenario-metrics">
+                      <div>
+                        <dt>Saved</dt>
+                        <dd>
+                          {scenario.water_saved_mm} mm (
+                          {formatScenarioPercent(scenario.water_saved_percent)})
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Yield</dt>
+                        <dd>
+                          {formatScenarioPercent(
+                            scenario.projected_yield_percent,
+                          )}
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </section>

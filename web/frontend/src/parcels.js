@@ -1,6 +1,7 @@
 const PARCEL_STORAGE_PREFIX = "terramoist.parcels";
 const EARTH_RADIUS_METERS = 6378137;
 const DEFAULT_PLANT_TYPE = "wheat";
+const DEFAULT_IRRIGATION_TYPE = "fixed";
 
 function storageKey(userId) {
   return `${PARCEL_STORAGE_PREFIX}.${userId}`;
@@ -31,6 +32,7 @@ export function createParcel(points, parcelCount) {
     name: `Parcel ${safeCount}`,
     points,
     plantType: DEFAULT_PLANT_TYPE,
+    irrigationType: DEFAULT_IRRIGATION_TYPE,
     irrigationEvents: [],
     createdAt: new Date().toISOString(),
   };
@@ -68,6 +70,7 @@ function normalizeParcel(parcel) {
   return {
     ...parcel,
     plantType: parcel.plantType ?? DEFAULT_PLANT_TYPE,
+    irrigationType: parcel.irrigationType ?? DEFAULT_IRRIGATION_TYPE,
     irrigationEvents: Array.isArray(parcel.irrigationEvents)
       ? parcel.irrigationEvents
       : [],

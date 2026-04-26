@@ -18,6 +18,7 @@ class IrrigationRecommendationRequest(BaseModel):
         description="Parcel polygon points as [lat, lon] pairs."
     )
     plantType: str = "wheat"
+    irrigationType: Literal["fixed", "moving"] = "fixed"
     irrigationEvents: list[IrrigationEvent] = Field(default_factory=list)
     lookbackDays: int = Field(default=10, ge=1, le=45)
 
@@ -79,6 +80,16 @@ class WaterBalanceResponse(BaseModel):
     daily: list[WaterBalanceDayResponse]
 
 
+class IrrigationScenarioResponse(BaseModel):
+    category: Literal["ideal", "optimal", "enough"]
+    label: str
+    water_mm: float
+    effective_water_mm: float
+    water_saved_mm: float
+    water_saved_percent: float
+    projected_yield_percent: float
+
+
 class IrrigationRecommendationResponse(BaseModel):
     should_irrigate: bool
     urgency: Literal["low", "medium", "high"]
@@ -91,6 +102,8 @@ class IrrigationRecommendationResponse(BaseModel):
     reason: str
     bbox: tuple[float, float, float, float]
     plant_type: str
+    irrigation_type: Literal["fixed", "moving"]
     moisture: MoistureFeaturesResponse
     weather: WeatherFeaturesResponse
     water_balance: WaterBalanceResponse
+    scenarios: list[IrrigationScenarioResponse]
