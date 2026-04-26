@@ -1,7 +1,5 @@
 function getApiBase() {
-  const base =
-    import.meta.env.VITE_API_BASE ??
-    `http://${window.location.hostname}:8000/api/v1`;
+  const base = import.meta.env.VITE_API_BASE ?? "/api/v1";
   return base.replace(/\/+$/, "");
 }
 
@@ -56,6 +54,7 @@ export async function fetchIrrigationRecommendation({ parcel }) {
       fieldName: parcel.name,
       points: parcel.points,
       plantType: parcel.plantType,
+      irrigationType: parcel.irrigationType ?? "fixed",
       irrigationEvents: parcel.irrigationEvents ?? [],
       lookbackDays: 10,
     }),

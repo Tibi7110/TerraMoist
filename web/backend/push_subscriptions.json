@@ -5,5 +5,12 @@
       "p256dh": "BMn3OQRR74kiJrsrxGvfPKG1ZoK2D97W4MbRFyWH3BlvUZ7Y8qwrdX6HDo4lHpurgM2C4LOO0kIhYasGesavLWg",
       "auth": "UGa-t95XFpvwhhSBqkyUOQ"
     }
+  },
+  {
+    "endpoint": "https://fcm.googleapis.com/fcm/send/esTlFnSgVN0:APA91bHiGvTYCV78kAgAq8t9yuDgS2PWQN1Uw_sGmK30Mf6zBY4McTuqy1mvg-yOWzZMaRN5iTu1PyaHeigemGOG-l9hMkDp1OJ1PUkapSWHelh7dDol9R7Fuye4mc7RidfEm4m690Mx",
+    "keys": {
+      "p256dh": "BNqi0d7BsQn8RF98Bv2BT8i_jQ3sC5hZNlUfxjjdqf6vBEX77d64kxIUWbvGcx3eKwFy52X5wx5jz4AK4jPXHL0",
+      "auth": "K_RK4V6x4V7BnOz1OK_f6g"
+    }
   }
 ]

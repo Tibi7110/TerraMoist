@@ -62,6 +62,7 @@ async def recommend_irrigation(
             irrigation_events=[
                 event.model_dump() for event in req.irrigationEvents
             ],
+            irrigation_type=req.irrigationType,
         )
     except Exception as exc:
         logger.exception("Irrigation recommendation failed")
