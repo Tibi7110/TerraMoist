@@ -130,10 +130,15 @@ export default function FarmWorkspace({ currentUser, onLogout }) {
     setDraftParcelPoints([]);
   }
 
-  function handleSelectParcel(parcelId) {
-    setSelectedParcelId(parcelId);
+  async function handleSelectParcel(parcelId) {
+    if (simulationRun?.state === "running") {
+      try { await stopSimulation(simulationRun.run_id); } catch (_) {}
+    }
     setSimulationRun(null);
     setSimulationError(null);
+    setAnalysisParcelId(null);
+    setAnalysisError(null);
+    setSelectedParcelId(parcelId);
     const parcel = parcels.find((item) => item.id === parcelId);
     if (parcel) {
       setBounds(getParcelBounds(parcel.points));
